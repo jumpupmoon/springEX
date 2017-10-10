@@ -2,6 +2,8 @@ package cafe.jjdev.web;
 
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,7 +37,7 @@ public class MemberController {
 		System.out.println(memberRequest);
 		memberService.addMember(memberRequest);
 		return "redirect:/memberList"; // request.sendRedirect("/memberList") 
-		//redirect: ~ ����� ���û�ϰڴ�.
+		//redirect: 
 		
 	}
 	/*
@@ -56,5 +58,44 @@ public class MemberController {
 		Member member = memberDao.selectMemberOne(2);
 		model.addAttribute("member", member);
 		return "getMember";
+	}
+	
+	//로그인된 사용자만 접근하는 페이지
+	@RequestMapping("/test")
+	public String test(HttpSession session) {
+		if(session.getAttribute("loginMember") == null) {
+			return "redirect:/login";
+		}else {
+			return "test";
+		}		
+	}
+	
+	//로그인
+	@RequestMapping(value="/login", method = RequestMethod.GET)
+	public String login(HttpSession session) {
+		if(session.getAttribute("loginMember") != null) {
+			return "test";
+		}else {
+			return "login";
+		}		
+	}
+	
+	//로그인 처리
+	@RequestMapping(value="/login", method = RequestMethod.POST)
+	public String login(HttpSession session, Member member) {
+		Member loginMember = memberDao.login(member);
+		if(loginMember == null) {
+			return "redirect:/login";
+		}else {
+			session.setAttribute("loginMember", loginMember);
+			return "redirect:/test";
+		}		
+	}
+	
+	//로그아웃
+	@RequestMapping(value="/logout")
+	public String logout(HttpSession session) {
+		session.invalidate();
+		return "redirect:/login";
 	}
 }
